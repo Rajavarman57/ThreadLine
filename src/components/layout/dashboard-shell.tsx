@@ -10,13 +10,26 @@ import { SessionUser } from "@/lib/auth/session";
 interface DashboardShellProps {
   user: SessionUser;
   children: React.ReactNode;
+  lowStockCount?: number;
 }
 
-export function DashboardShell({ user, children }: DashboardShellProps) {
+export function DashboardShell({ user, children, lowStockCount = 0 }: DashboardShellProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const navGroups = getFilteredNav(user.role);
+  const rawGroups = getFilteredNav(user.role);
+  const navGroups = rawGroups.map((group) => ({
+    ...group,
+    items: group.items.map((item) => {
+      if (item.href === "/inventory" && lowStockCount > 0) {
+        return {
+          ...item,
+          badge: `${lowStockCount} Low`,
+        };
+      }
+      return item;
+    }),
+  }));
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">

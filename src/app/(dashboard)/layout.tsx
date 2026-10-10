@@ -13,5 +13,12 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  return <DashboardShell user={user}>{children}</DashboardShell>;
+  const { getLowStockCount } = await import("@/services/inventory");
+  const lowStockCount = await getLowStockCount().catch(() => 0);
+
+  return (
+    <DashboardShell user={user} lowStockCount={lowStockCount}>
+      {children}
+    </DashboardShell>
+  );
 }
