@@ -14,7 +14,10 @@ export default async function DashboardLayout({
   }
 
   const { getLowStockCount } = await import("@/services/inventory");
-  const lowStockCount = await getLowStockCount().catch(() => 0);
+  const lowStockCount = await getLowStockCount().catch((err) => {
+    console.error("Failed to load lowStockCount for layout:", err);
+    return 0;
+  });
 
   return (
     <DashboardShell user={user} lowStockCount={lowStockCount}>

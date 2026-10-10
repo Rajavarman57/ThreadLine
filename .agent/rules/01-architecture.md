@@ -26,3 +26,10 @@
 ## User Interface Guidelines
 - **Mobile-First**: Design responsive layouts starting from mobile viewport up to desktop workstations.
 - **State Feedback**: Every view and data widget must provide distinct **loading**, **empty**, and **error** states.
+
+
+## Server Component Serialization & Error Handling
+- **Plain Serializable Data**: Server components must pass only plain serialisable data (strings, numbers, booleans, ISO date strings, plain objects and arrays) to client components.
+- **Conversion at the Service Boundary**: Convert Prisma Decimal with a helper (`toNumber`) and Date with `toISOString` at the service boundary.
+- **Client Components for Table & UI Functions**: TanStack table column definitions, cell renderers and any inline functions live inside `'use client'` files, never in `page.tsx`.
+- **Never Swallow Errors**: Never swallow errors: log with `console.error` and rethrow or show an error state.

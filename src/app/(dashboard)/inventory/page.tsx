@@ -5,7 +5,7 @@ import { InventoryTabs } from "./inventory-tabs";
 import { InventoryClient } from "./inventory-client";
 import { Role } from "@prisma/client";
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function InventoryPage() {
   const user = await getSessionUser();
