@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PackageCheck, History, PlusCircle } from "lucide-react";
+import { PackageCheck, History, PlusCircle, FileText } from "lucide-react";
 
 export function DispatchTabs() {
   const pathname = usePathname();
@@ -25,6 +25,12 @@ export function DispatchTabs() {
       href: "/dispatch/history",
       icon: History,
       active: pathname === "/dispatch/history",
+    },
+    {
+      title: "Invoices & Payments",
+      href: "/dispatch/invoices",
+      icon: FileText,
+      active: pathname.startsWith("/dispatch/invoices"),
     },
   ];
 

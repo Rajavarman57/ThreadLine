@@ -171,6 +171,35 @@ export async function getFinishedGoodsSummary(): Promise<FinishedGoodsSummary>;
 export async function getOrderForDispatch(orderId: string): Promise<OrderDispatchData>;
 export async function createDispatch(orderId: string, rollIds: string[], vehicleNo: string, driver: string): Promise<CreateDispatchResult>;
 export async function getDispatchHistory(input: DispatchFilterInput): Promise<PaginatedDispatches>;
-export async function getDispatchDetail(id: string): Promise<DispatchDetail | null>;
-```
 
+---
+
+## 8. Invoicing & Payments (`src/services/payments.ts`)
+
+Handles commercial billing lifecycle, payment allocations, accounts receivable analytics, and dynamic on-the-fly PDF invoice generation.
+
+### Rules & Enforcements
+1. **Invoice Lifecycle**:
+   - Status transitions: `UNPAID` $\rightarrow$ `PARTIAL` $\rightarrow$ `PAID`.
+   - Age calculation: Elapsed days since invoice creation. Invoices unpaid or partially paid for $> 30$ days are flagged as overdue.
+2. **Payment Allocation**:
+   - Managed in a single atomic transaction: Inserts `Payment`, recalculates `paidAmount` and remaining `outstanding`.
+   - Strict validation: Payment amount cannot exceed the current outstanding balance.
+   - Status updates dynamically: If `paidAmount >= total`, status becomes `PAID`; if `paidAmount > 0`, status becomes `PARTIAL`; otherwise `UNPAID`.
+   - Comprehensive audit logging via `createAuditLog`.
+3. **Dynamic On-the-Fly PDF (`/api/invoices/[id]/pdf`)**:
+   - Generated dynamically with `@react-pdf/renderer` via `renderToBuffer` and streamed directly to the client; never persisted to disk or cloud storage.
+   - Enforces mathematical identity: Subtotal, 5% GST, and PDF total strictly match `Invoice.total`.
+4. **Role Guardrails**:
+   - `ADMIN`, `ACCOUNTS`: Can record payments and download any invoice PDF.
+   - `STORE`, `SUPERVISOR`, `QC`: Read-only access to invoices.
+   - `BUYER`: Can only view and download invoice PDFs belonging to their own associated `buyerId`.
+
+### Exported Signatures
+```typescript
+export async function getInvoicesList(filters?: InvoiceListFilters): Promise<PaginatedInvoices>;
+export async function getInvoiceDetail(id: string): Promise<InvoiceDetail | null>;
+export async function recordPayment(input: RecordPaymentInput): Promise<RecordPaymentResult>;
+export async function getReceivablesTotal(): Promise<{ totalReceivables: number; overdueCount: number; overdueTotal: number }>;
+export async function getInvoiceSummary(month?: string): Promise<{ totalBilled: number; totalCollected: number; invoiceCount: number }>;
+```
