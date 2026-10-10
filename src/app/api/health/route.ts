@@ -13,6 +13,8 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: true,
+        status: "healthy",
+        version: "1.0.0",
         dbLatencyMs,
         time: new Date().toISOString(),
       },
