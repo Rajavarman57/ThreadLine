@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CheckCircle2, ListChecks, QrCode } from "lucide-react";
+import { CheckCircle2, ListChecks, QrCode, BarChart3 } from "lucide-react";
 
 export function QualityTabs() {
   const pathname = usePathname();
@@ -19,6 +19,12 @@ export function QualityTabs() {
       href: "/quality/rolls",
       icon: ListChecks,
       active: pathname === "/quality/rolls",
+    },
+    {
+      title: "Defect Analytics",
+      href: "/quality/analytics",
+      icon: BarChart3,
+      active: pathname === "/quality/analytics",
     },
   ];
 

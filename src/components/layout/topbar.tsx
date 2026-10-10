@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { SessionUser } from "@/lib/auth/session";
+import { NotificationBell } from "./notification-bell";
+import { GlobalSearch } from "./global-search";
 
 interface TopbarProps {
   user: SessionUser;
@@ -86,24 +88,17 @@ export function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
 
       {/* Right: Notifications & User Menu */}
       <div className="flex items-center gap-3">
+        {/* Global Search */}
+        <GlobalSearch />
+
         {/* Organisation Pill on larger screens */}
         <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border text-[11px] font-medium text-muted-foreground">
           <Building2 className="size-3 text-indigo-400" />
           <span>Everest Textile Mills</span>
         </div>
 
-        {/* Notification Bell Placeholder */}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground hover:text-foreground relative rounded-xl"
-            title="Notifications"
-          >
-            <Bell className="size-4" />
-            <span className="absolute top-1.5 right-1.5 size-2 bg-indigo-500 rounded-full" />
-          </Button>
-        </div>
+        {/* Live Notification Bell */}
+        <NotificationBell />
 
         {/* User Dropdown Menu */}
         <DropdownMenu>
