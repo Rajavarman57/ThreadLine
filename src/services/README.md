@@ -203,3 +203,43 @@ export async function recordPayment(input: RecordPaymentInput): Promise<RecordPa
 export async function getReceivablesTotal(): Promise<{ totalReceivables: number; overdueCount: number; overdueTotal: number }>;
 export async function getInvoiceSummary(month?: string): Promise<{ totalBilled: number; totalCollected: number; invoiceCount: number }>;
 ```
+
+---
+
+## 9. Workforce & Expenses (`src/services/hr.ts` & `src/services/expenses.ts`)
+
+Handles mill floor worker shifts, attendance roster, overtime tracking, monthly wages finalisation, and operational expense logs.
+
+### Rules & Enforcements
+1. **Attendance Roster**:
+   - Bulk upsert on `(workerId, date, shift)` enables idempotent floor entries.
+   - Defaults: Regular shift = 8 hours, overtime = 0 hours.
+2. **Wages Calculation**:
+   - Gross formula: $\text{gross} = \text{dailyRate} \times \text{daysPresent} + \text{otRatePerHour} \times \text{overtimeHours}$.
+   - Finalisation: Idempotent write to `WageRecord` (unique `workerId + month`). Shows a locked state once finalised and refuses to run twice.
+3. **Operational Expenses**:
+   - Categorised into `ELECTRICITY`, `MAINTENANCE`, `TRANSPORT`, `RENT`, and `OTHER`.
+   - Optional link to `Order` for product-level gross margin allocations.
+4. **Finance Integration**:
+   - `getMonthlyWagesTotal(month)`: Uses finalised records if present, otherwise computed dynamically from attendance.
+   - `getMonthlyExpensesTotal(month)`: Summarises all operational overhead for the month.
+5. **Role Guardrails**:
+   - `SUPERVISOR`, `ADMIN`: Mark daily attendance.
+   - `ACCOUNTS`, `ADMIN`: Finalise wages and record expenses.
+   - `STORE`: Read-only attendance and expenses access.
+
+### Exported Signatures
+```typescript
+// HR & Wages
+export async function getAttendanceForShift(dateStr: string, shift: Shift): Promise<DayAttendanceData>;
+export async function saveBulkAttendance(input: BulkAttendanceInput): Promise<{ count: number }>;
+export async function getMonthlyAttendanceSummary(month: string): Promise<WorkerMonthlyAttendance[]>;
+export async function getMonthlyWages(month: string): Promise<MonthlyWagesResult>;
+export async function finaliseMonthWages(month: string): Promise<{ count: number; totalGross: number }>;
+export async function getMonthlyWagesTotal(month: string): Promise<number>;
+
+// Expenses
+export async function getExpensesList(input: ExpenseListFilterInput): Promise<PaginatedExpenses>;
+export async function createExpense(input: CreateExpenseInput): Promise<ExpenseItem>;
+export async function getMonthlyExpensesTotal(month?: string): Promise<number>;
+```
