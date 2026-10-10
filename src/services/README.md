@@ -243,3 +243,32 @@ export async function getExpensesList(input: ExpenseListFilterInput): Promise<Pa
 export async function createExpense(input: CreateExpenseInput): Promise<ExpenseItem>;
 export async function getMonthlyExpensesTotal(month?: string): Promise<number>;
 ```
+
+---
+
+## 10. Order Tracking & Buyer Portal (`src/services/tracking.ts`)
+
+Handles real-time multi-stage order tracking, weighted progress computation, dynamic ETA schedules, and multi-tenant buyer portal isolation.
+
+### Rules & Enforcements
+1. **Weighted Progress**:
+   - Never stored as a static field; dynamically derived from floor execution:
+     - Spinning work order progress: 20%
+     - Weaving work order progress: 25%
+     - Dyeing work order progress: 25%
+     - QC passed rolls ratio: 15%
+     - Dispatched rolls ratio: 15%
+2. **Timeline Risk Detection**:
+   - Flags an order `isAtRisk` when manufacturing progress falls more than 15% behind elapsed calendar time, or when past deadline.
+3. **Multi-Tenant Buyer Isolation**:
+   - `/portal`: Queries strictly filter `where: { buyerId }`.
+   - `/portal/orders/[orderNo]`: Strict server-side check; non-matching orders return 404.
+4. **Public Privacy Protection**:
+   - `/track/[orderNo]`: Read-only view exposing stage steppers, percentage, and ETA, strictly scrubbing financial prices, buyer identities, and tax invoices.
+
+### Exported Signatures
+```typescript
+export async function getOrderTracking(orderNo: string): Promise<OrderTrackingResult | null>;
+export async function getBuyerOrders(buyerId: string): Promise<BuyerPortalOrderItem[]>;
+export async function getBuyerOrderDetail(orderNo: string, buyerId: string): Promise<BuyerOrderDetail | null>;
+```
