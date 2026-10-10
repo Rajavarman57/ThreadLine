@@ -148,3 +148,29 @@ export async function markReworkDone(input: ReworkDoneInput): Promise<Roll>;
 export async function getRollTrace(rollNo: string): Promise<RollTraceDetail | null>;
 export async function getRollsRegister(filters: RollsRegisterFilterInput): Promise<PaginatedResult<RollRegisterRow>>;
 ```
+
+---
+
+## 7. Dispatch & Logistics (`src/services/dispatch.ts`)
+
+Handles race-safe finished goods allocation, vehicle manifests, and automatic billing invoice generation.
+
+### Rules & Enforcements
+1. **Roll Eligibility**: Only rolls with `qcStatus = 'PASSED'` and `dispatchId = null` can be allocated to a dispatch manifest.
+2. **Race-Safe Concurrency**: Atomic claim via `updateMany({ where: { id: { in: rollIds }, dispatchId: null, qcStatus: 'PASSED' } })` ensures that parallel requests attempting to allocate the same roll will abort and roll back with an explicit error.
+3. **Sequential Identifiers**: Uses `nextNumber("dispatch", "DSP-")` and `nextNumber("invoice", "INV-")`.
+4. **Automatic Billing**: Every dispatch automatically generates an `Invoice` with subtotal ($\text{totalMetres} \times \text{order.ratePerMetre}$), standard 5% tax, and status `UNPAID`.
+5. **Order Completion**: Transitions `Order.status` to `DISPATCHED` when all of its passed rolls have been claimed.
+6. **Role Guardrails**:
+   - `ADMIN`, `STORE`, `ACCOUNTS`: Can initiate dispatches.
+   - `SUPERVISOR`, `QC`: Can inspect finished goods and shipment history.
+
+### Exported Signatures
+```typescript
+export async function getFinishedGoodsSummary(): Promise<FinishedGoodsSummary>;
+export async function getOrderForDispatch(orderId: string): Promise<OrderDispatchData>;
+export async function createDispatch(orderId: string, rollIds: string[], vehicleNo: string, driver: string): Promise<CreateDispatchResult>;
+export async function getDispatchHistory(input: DispatchFilterInput): Promise<PaginatedDispatches>;
+export async function getDispatchDetail(id: string): Promise<DispatchDetail | null>;
+```
+

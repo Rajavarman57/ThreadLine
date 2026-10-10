@@ -1,20 +1,23 @@
 import { PageHeader } from "@/components/shared/page-header";
-import { EmptyState } from "@/components/shared/empty-state";
-import { Truck } from "lucide-react";
+import { DispatchTabs } from "./dispatch-tabs";
+import { getFinishedGoodsSummary } from "@/services/dispatch";
+import { FinishedGoodsClient } from "./finished-goods-client";
 
-export default function DispatchPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DispatchPage() {
+  const summary = await getFinishedGoodsSummary();
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dispatch & Logistics"
-        description="Pack approved rolls, assign transport vehicles and drivers, generate packing slips, and trigger invoice generation."
+        title="Dispatch & Finished Goods"
+        description="Inspect QC-Passed fabric rolls ready for shipment, prepare transport manifests, and issue invoices."
       />
 
-      <EmptyState
-        icon={Truck}
-        title="No Dispatches Scheduled"
-        description="Create a new dispatch manifest by allocating QC-approved (PASSED) fabric rolls to customer orders."
-      />
+      <DispatchTabs />
+
+      <FinishedGoodsClient summary={summary} />
     </div>
   );
 }
