@@ -72,3 +72,32 @@ export async function getBOMs(params: PaginationQuery & { fabricType?: string })
 export async function upsertBOM(input: BomInput): Promise<BOM>;
 export async function deleteBOM(id: string): Promise<BOM>;
 ```
+
+---
+
+## 3. Orders & Material Planning (`src/services/orders.ts` & `src/services/feasibility.ts`)
+
+Handles customer fabric contracts, material reservation checks, and order cancellation.
+
+### Exported Signatures
+```typescript
+export async function getOrders(params: { page?: number; pageSize?: number; status?: OrderStatus; search?: string }): Promise<PaginatedResult<OrderRow>>;
+export async function getOrderDetail(orderId: string): Promise<OrderDetail | null>;
+export async function createOrder(input: CreateOrderInput): Promise<Order>;
+export async function cancelOrder(orderId: string): Promise<Order>;
+export async function checkFeasibility(input: CheckFeasibilityInput): Promise<FeasibilityResult>;
+```
+
+---
+
+## 4. Procurement & Purchase Orders (`src/services/procurement.ts`)
+
+Supplier purchase orders and automatic generation of replenishment orders for identified shortfalls.
+
+### Exported Signatures
+```typescript
+export async function getPurchaseOrders(params: { page?: number; pageSize?: number; status?: POStatus; supplierId?: string }): Promise<PaginatedResult<PurchaseOrderRow>>;
+export async function createPurchaseOrder(input: CreatePurchaseOrderInput): Promise<PurchaseOrder>;
+export async function updatePOStatus(poId: string, status: POStatus): Promise<PurchaseOrder>;
+export async function createPOForShortfall(supplierId: string, lines: Array<{ yarnTypeId: string; qty: number; rate?: number }>): Promise<PurchaseOrder>;
+```

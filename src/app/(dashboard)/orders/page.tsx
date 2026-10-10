@@ -1,26 +1,52 @@
+import { getOrders } from "@/services/orders";
+import { getSessionUser } from "@/lib/auth/session";
 import { PageHeader } from "@/components/shared/page-header";
-import { EmptyState } from "@/components/shared/empty-state";
-import { Button } from "@/components/ui/button";
-import { ClipboardList, Plus } from "lucide-react";
+import { OrdersClient } from "./orders-client";
+import { OrderStatus, Role } from "@prisma/client";
 
-export default function OrdersPage() {
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  searchParams: Promise<{
+    page?: string;
+    pageSize?: string;
+    status?: string;
+    search?: string;
+  }>;
+}
+
+export default async function OrdersPage({ searchParams }: PageProps) {
+  const user = await getSessionUser();
+  const userRole = user?.role || Role.BUYER;
+
+  const params = await searchParams;
+  const page = parseInt(params.page || "1", 10);
+  const pageSize = parseInt(params.pageSize || "15", 10);
+  const status = params.status as OrderStatus | undefined;
+  const search = params.search || "";
+
+  const result = await getOrders({
+    page,
+    pageSize,
+    status,
+    search,
+  });
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Customer Orders & Planning"
-        description="Manage sales orders, check BOM yarn feasibility, schedule spinning/weaving/dyeing, and track order fulfillment."
-      >
-        <Button size="sm" className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-xs gap-1.5">
-          <Plus className="size-4" />
-          Create Order
-        </Button>
-      </PageHeader>
+        title="Customer Orders & Manufacturing Planning"
+        description="Booked commercial fabric orders, delivery schedules, material reservation status, and work order progress."
+      />
 
-      <EmptyState
-        icon={ClipboardList}
-        title="No Orders Registered Yet"
-        description="Orders placed by buyers or logged by sales staff will appear here with real-time manufacturing stage progress."
-        actionLabel="Create First Order"
+      <OrdersClient
+        initialData={result.data}
+        totalCount={result.total}
+        currentPage={result.page}
+        pageSize={result.pageSize}
+        status={status}
+        search={search}
+        userRole={userRole}
       />
     </div>
   );

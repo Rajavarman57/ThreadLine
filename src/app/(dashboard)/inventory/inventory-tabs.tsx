@@ -8,11 +8,13 @@ import {
   Truck,
   ArrowRightLeft,
   PlusCircle,
+  ShoppingCart,
 } from "lucide-react";
 
 const INVENTORY_TABS = [
   { name: "Stock Overview", href: "/inventory", icon: Boxes },
   { name: "Goods Receipts", href: "/inventory/receipts", icon: Truck },
+  { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ShoppingCart },
   { name: "Movements Ledger", href: "/inventory/movements", icon: ArrowRightLeft },
 ];
 
