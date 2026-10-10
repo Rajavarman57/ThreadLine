@@ -101,3 +101,29 @@ export async function createPurchaseOrder(input: CreatePurchaseOrderInput): Prom
 export async function updatePOStatus(poId: string, status: POStatus): Promise<PurchaseOrder>;
 export async function createPOForShortfall(supplierId: string, lines: Array<{ yarnTypeId: string; qty: number; rate?: number }>): Promise<PurchaseOrder>;
 ```
+
+---
+
+## 5. Production & Manufacturing Floor (`src/services/production.ts`)
+
+Handles shop-floor scheduling, machine board monitoring, stage-by-stage work orders, and roll batch generation.
+
+### Stage Workflow
+1. **SPINNING**: Consumes raw cotton/polyester yarn via `issueYarnToWorkOrder` in proportion to logged output metres.
+2. **WEAVING**: Converts spun yarn into raw greige fabric.
+3. **DYEING**: Applies wet processing, finishing, and partitions output into standardised 50m fabric rolls (`ROLL_LENGTH_M = 50`) with unique `RL-XXXXXX` barcodes and `PENDING` QC status. Remainder rolls are generated upon stage completion.
+
+### Exported Signatures
+```typescript
+export async function getPlanningEligibleOrders(): Promise<EligibleOrder[]>;
+export async function getIdleMachines(): Promise<{ spinning: Machine[]; weaving: Machine[]; dyeing: Machine[] }>;
+export async function planProduction(input: PlanProductionInput): Promise<WorkOrder[]>;
+export async function getMachineBoard(): Promise<MachineBoardSummary>;
+export async function startWorkOrder(workOrderId: string): Promise<WorkOrder>;
+export async function recordMachineBreakdown(machineId: string, reason?: string): Promise<{ ok: boolean }>;
+export async function setMachineMaintenance(machineId: string, reason?: string): Promise<{ ok: boolean }>;
+export async function resumeMachine(machineId: string): Promise<{ ok: boolean }>;
+export async function markMachineIdle(machineId: string): Promise<Machine>;
+export async function logProductionOutput(input: LogOutputInput): Promise<{ log: ProductionLog; updatedWO: WorkOrder }>;
+export async function getWorkOrders(filters: WorkOrdersFilterInput): Promise<PaginatedResult<WorkOrderRow>>;
+```

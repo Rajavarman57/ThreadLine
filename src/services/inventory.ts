@@ -434,7 +434,7 @@ export async function issueYarnToWorkOrder(
   yarnTypeId: string,
   qty: number
 ) {
-  const user = await requireRole([Role.ADMIN, Role.STORE]);
+  const user = await requireRole([Role.ADMIN, Role.STORE, Role.SUPERVISOR]);
 
   if (qty <= 0) {
     throw new Error("Issue quantity must be greater than zero");
