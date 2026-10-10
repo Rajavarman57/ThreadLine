@@ -1,0 +1,600 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  STORE
+  SUPERVISOR
+  QC
+  ACCOUNTS
+  BUYER
+}
+
+enum MachineType {
+  SPINNING
+  WEAVING
+  DYEING
+}
+
+enum MachineStatus {
+  RUNNING
+  IDLE
+  BREAKDOWN
+  MAINTENANCE
+}
+
+enum StockMovementReason {
+  RECEIPT
+  ISSUE
+  ADJUST
+  RESERVE
+  RELEASE
+}
+
+enum POStatus {
+  DRAFT
+  SENT
+  PARTIAL
+  RECEIVED
+}
+
+enum OrderStatus {
+  CONFIRMED
+  IN_PRODUCTION
+  QC
+  READY
+  DISPATCHED
+  CANCELLED
+}
+
+enum ProductionStage {
+  SPINNING
+  WEAVING
+  DYEING
+}
+
+enum WorkOrderStatus {
+  PLANNED
+  RUNNING
+  DONE
+  BLOCKED
+}
+
+enum Shift {
+  A
+  B
+  C
+}
+
+enum QCStatus {
+  PENDING
+  PASSED
+  REWORK
+  REJECTED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+// -------------------------------------------------------------
+// MODELS
+// -------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role
+  buyerId      String?
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  buyer        Buyer?    @relation(fields: [buyerId], references: [id])
+
+  stockMovements StockMovement[]
+  goodsReceipts  GoodsReceipt[]
+  productionLogs ProductionLog[]
+  qcInspections  QCInspection[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+
+  @@index([buyerId])
+  @@index([role])
+  @@index([active])
+  @@index([createdAt])
+}
+
+model Counter {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}
+
+model Supplier {
+  id            String          @id @default(cuid())
+  name          String
+  contactPerson String?
+  email         String?
+  phone         String?
+  address       String?
+  active        Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  purchaseOrders PurchaseOrder[]
+
+  @@index([active])
+  @@index([createdAt])
+}
+
+model Buyer {
+  id            String    @id @default(cuid())
+  name          String
+  contactPerson String?
+  email         String?
+  phone         String?
+  address       String?
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  users         User[]
+  orders        Order[]
+
+  @@index([active])
+  @@index([createdAt])
+}
+
+model Worker {
+  id             String        @id @default(cuid())
+  name           String
+  code           String?       @unique
+  role           String?
+  phone          String?
+  dailyRate      Decimal       @db.Decimal(10, 2)
+  otRatePerHour  Decimal       @db.Decimal(10, 2)
+  active         Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  attendances    Attendance[]
+  wageRecords    WageRecord[]
+
+  @@index([active])
+  @@index([createdAt])
+}
+
+model Machine {
+  id              String        @id @default(cuid())
+  code            String        @unique
+  name            String?
+  type            MachineType
+  status          MachineStatus @default(IDLE)
+  hourlyOverhead  Decimal       @db.Decimal(10, 2)
+  capacityPerHour Decimal       @db.Decimal(10, 2)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  workOrders      WorkOrder[]
+  rolls           Roll[]
+
+  @@index([code])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model YarnType {
+  id             String          @id @default(cuid())
+  type           String
+  colour         String
+  unit           String          @default("KG")
+  reorderLevel   Decimal         @db.Decimal(12, 2)
+  ratePerUnit    Decimal         @db.Decimal(10, 2)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  stockMovements StockMovement[]
+  purchaseLines  PurchaseLine[]
+  goodsReceipts  GoodsReceipt[]
+  boms           BOM[]
+
+  @@index([createdAt])
+}
+
+model StockMovement {
+  id          String              @id @default(cuid())
+  yarnTypeId  String
+  qty         Decimal             @db.Decimal(12, 2) // signed (+receipt, -issue)
+  reason      StockMovementReason
+  refType     String?
+  refId       String?
+  note        String?
+  createdById String?
+  createdAt   DateTime            @default(now())
+
+  yarnType    YarnType            @relation(fields: [yarnTypeId], references: [id])
+  createdBy   User?               @relation(fields: [createdById], references: [id])
+
+  @@index([yarnTypeId])
+  @@index([createdById])
+  @@index([reason])
+  @@index([refType, refId])
+  @@index([createdAt])
+  @@index([yarnTypeId, createdAt])
+}
+
+model PurchaseOrder {
+  id          String         @id @default(cuid())
+  poNo        String         @unique
+  supplierId  String
+  status      POStatus       @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  supplier    Supplier       @relation(fields: [supplierId], references: [id])
+  lines       PurchaseLine[]
+
+  @@index([poNo])
+  @@index([supplierId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PurchaseLine {
+  id            String         @id @default(cuid())
+  poId          String
+  yarnTypeId    String
+  qty           Decimal        @db.Decimal(12, 2)
+  receivedQty   Decimal        @default(0) @db.Decimal(12, 2)
+  rate          Decimal        @db.Decimal(10, 2)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  purchaseOrder PurchaseOrder  @relation(fields: [poId], references: [id], onDelete: Cascade)
+  yarnType      YarnType       @relation(fields: [yarnTypeId], references: [id])
+  goodsReceipts GoodsReceipt[]
+
+  @@index([poId])
+  @@index([yarnTypeId])
+  @@index([createdAt])
+}
+
+model GoodsReceipt {
+  id           String        @id @default(cuid())
+  poLineId     String?
+  yarnTypeId   String
+  qty          Decimal       @db.Decimal(12, 2)
+  orderId      String?
+  receivedById String?
+  vehicleNo    String?
+  createdAt    DateTime      @default(now())
+
+  poLine       PurchaseLine? @relation(fields: [poLineId], references: [id])
+  yarnType     YarnType      @relation(fields: [yarnTypeId], references: [id])
+  order        Order?        @relation(fields: [orderId], references: [id])
+  receivedBy   User?         @relation(fields: [receivedById], references: [id])
+
+  @@index([poLineId])
+  @@index([yarnTypeId])
+  @@index([orderId])
+  @@index([receivedById])
+  @@index([createdAt])
+}
+
+model Order {
+  id            String         @id @default(cuid())
+  orderNo       String         @unique
+  buyerId       String
+  fabricType    String
+  colour        String
+  qtyMetres     Decimal        @db.Decimal(12, 2)
+  ratePerMetre  Decimal        @db.Decimal(10, 2)
+  deadline      DateTime
+  status        OrderStatus    @default(CONFIRMED)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  buyer         Buyer          @relation(fields: [buyerId], references: [id])
+  workOrders    WorkOrder[]
+  rolls         Roll[]
+  dispatches    Dispatch[]
+  goodsReceipts GoodsReceipt[]
+  expenses      Expense[]
+
+  @@index([orderNo])
+  @@index([buyerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([buyerId, status])
+}
+
+model BOM {
+  id           String    @id @default(cuid())
+  fabricType   String
+  yarnTypeId   String
+  yarnPerMetre Decimal   @db.Decimal(10, 4)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  yarnType     YarnType  @relation(fields: [yarnTypeId], references: [id])
+
+  @@unique([fabricType, yarnTypeId])
+  @@index([yarnTypeId])
+  @@index([fabricType])
+  @@index([createdAt])
+}
+
+model WorkOrder {
+  id             String          @id @default(cuid())
+  orderId        String
+  stage          ProductionStage
+  machineId      String?
+  targetQty      Decimal         @db.Decimal(12, 2)
+  producedQty    Decimal         @default(0) @db.Decimal(12, 2)
+  status         WorkOrderStatus @default(PLANNED)
+  startedAt      DateTime?
+  endedAt        DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  machine        Machine?        @relation(fields: [machineId], references: [id])
+  productionLogs ProductionLog[]
+  rolls          Roll[]
+
+  @@index([orderId])
+  @@index([machineId])
+  @@index([stage])
+  @@index([status])
+  @@index([createdAt])
+  @@index([orderId, status])
+  @@index([machineId, status])
+}
+
+model ProductionLog {
+  id          String    @id @default(cuid())
+  workOrderId String
+  qty         Decimal   @db.Decimal(12, 2)
+  hours       Decimal   @db.Decimal(6, 2)
+  operatorId  String?
+  shift       Shift
+  createdAt   DateTime  @default(now())
+
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  operator    User?     @relation(fields: [operatorId], references: [id])
+
+  @@index([workOrderId])
+  @@index([operatorId])
+  @@index([shift])
+  @@index([createdAt])
+}
+
+model Roll {
+  id           String         @id @default(cuid())
+  rollNo       String         @unique
+  orderId      String
+  workOrderId  String?
+  machineId    String?
+  lengthM      Decimal        @db.Decimal(10, 2)
+  qcStatus     QCStatus       @default(PENDING)
+  dispatchId   String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  order        Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  workOrder    WorkOrder?     @relation(fields: [workOrderId], references: [id])
+  machine      Machine?       @relation(fields: [machineId], references: [id])
+  dispatch     Dispatch?      @relation(fields: [dispatchId], references: [id])
+  dispatchLine DispatchLine?
+  qcInspections QCInspection[]
+
+  @@index([rollNo])
+  @@index([orderId])
+  @@index([workOrderId])
+  @@index([machineId])
+  @@index([dispatchId])
+  @@index([qcStatus])
+  @@index([createdAt])
+  @@index([orderId, qcStatus])
+}
+
+model QCInspection {
+  id          String   @id @default(cuid())
+  rollId      String
+  inspectorId String?
+  result      QCStatus
+  defects     Json?
+  severity    String?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  roll        Roll     @relation(fields: [rollId], references: [id], onDelete: Cascade)
+  inspector   User?    @relation(fields: [inspectorId], references: [id])
+
+  @@index([rollId])
+  @@index([inspectorId])
+  @@index([result])
+  @@index([createdAt])
+}
+
+model Dispatch {
+  id           String         @id @default(cuid())
+  dispatchNo   String         @unique
+  orderId      String
+  vehicleNo    String
+  driver       String
+  dispatchedAt DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  order        Order          @relation(fields: [orderId], references: [id])
+  rolls        Roll[]
+  lines        DispatchLine[]
+  invoice      Invoice?
+
+  @@index([dispatchNo])
+  @@index([orderId])
+  @@index([dispatchedAt])
+  @@index([createdAt])
+}
+
+model DispatchLine {
+  id         String   @id @default(cuid())
+  dispatchId String
+  rollId     String   @unique // Prevents double-dispatching the same roll
+  createdAt  DateTime @default(now())
+
+  dispatch   Dispatch @relation(fields: [dispatchId], references: [id], onDelete: Cascade)
+  roll       Roll     @relation(fields: [rollId], references: [id])
+
+  @@index([dispatchId])
+  @@index([rollId])
+  @@index([createdAt])
+}
+
+model Invoice {
+  id         String        @id @default(cuid())
+  invoiceNo  String        @unique
+  dispatchId String        @unique
+  subtotal   Decimal       @db.Decimal(12, 2)
+  taxPct     Decimal       @db.Decimal(5, 2)
+  total      Decimal       @db.Decimal(12, 2)
+  status     InvoiceStatus @default(UNPAID)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  dispatch   Dispatch      @relation(fields: [dispatchId], references: [id])
+  payments   Payment[]
+
+  @@index([invoiceNo])
+  @@index([dispatchId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  amount    Decimal  @db.Decimal(12, 2)
+  method    String
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([paidAt])
+  @@index([createdAt])
+}
+
+model Attendance {
+  id            String   @id @default(cuid())
+  workerId      String
+  date          DateTime @db.Date
+  shift         Shift
+  hours         Decimal  @db.Decimal(5, 2)
+  overtimeHours Decimal  @default(0) @db.Decimal(5, 2)
+  present       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  worker        Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@unique([workerId, date, shift])
+  @@index([workerId])
+  @@index([date])
+  @@index([shift])
+  @@index([createdAt])
+}
+
+model WageRecord {
+  id          String    @id @default(cuid())
+  workerId    String
+  month       String    // e.g. "2026-10"
+  amount      Decimal   @db.Decimal(10, 2)
+  finalisedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  worker      Worker    @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@unique([workerId, month])
+  @@index([workerId])
+  @@index([month])
+  @@index([createdAt])
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  category  String
+  amount    Decimal  @db.Decimal(12, 2)
+  date      DateTime
+  orderId   String?
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order     Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([category])
+  @@index([orderId])
+  @@index([date])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  role      Role?
+  type      String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([role])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+}
