@@ -1,13 +1,22 @@
+import { PageHeader } from "@/components/shared/page-header";
+import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { CheckCircle2 } from "lucide-react";
+
 export default function QualityPage() {
   return (
-    <div className="space-y-4">
-      <div className="pb-4 border-b border-slate-800">
-        <h1 className="text-2xl font-bold text-white">Quality Control</h1>
-        <p className="text-sm text-slate-400">Roll inspection, defect logging, and grading gates (Roll.qcStatus = PASSED).</p>
-      </div>
-      <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center text-slate-400">
-        Quality module ready for implementation (Person C ownership).
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Quality Control & Inspection"
+        description="Inspect finished rolls, log defects, and grade fabric. Strict enforcement: only rolls with PASSED status can be dispatched."
+        badge={<StatusBadge status="PASSED" />}
+      />
+
+      <EmptyState
+        icon={CheckCircle2}
+        title="No Rolls Pending Inspection"
+        description="Rolls produced on spinning, weaving, and dyeing machines will appear here for QC approval."
+      />
     </div>
   );
 }

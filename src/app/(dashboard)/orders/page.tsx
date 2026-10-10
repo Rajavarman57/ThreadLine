@@ -1,13 +1,27 @@
+import { PageHeader } from "@/components/shared/page-header";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
+import { ClipboardList, Plus } from "lucide-react";
+
 export default function OrdersPage() {
   return (
-    <div className="space-y-4">
-      <div className="pb-4 border-b border-slate-800">
-        <h1 className="text-2xl font-bold text-white">Orders & Planning</h1>
-        <p className="text-sm text-slate-400">Customer orders, BOM feasibility calculations, and scheduling.</p>
-      </div>
-      <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center text-slate-400">
-        Orders module ready for implementation (Person B ownership).
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Customer Orders & Planning"
+        description="Manage sales orders, check BOM yarn feasibility, schedule spinning/weaving/dyeing, and track order fulfillment."
+      >
+        <Button size="sm" className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-xs gap-1.5">
+          <Plus className="size-4" />
+          Create Order
+        </Button>
+      </PageHeader>
+
+      <EmptyState
+        icon={ClipboardList}
+        title="No Orders Registered Yet"
+        description="Orders placed by buyers or logged by sales staff will appear here with real-time manufacturing stage progress."
+        actionLabel="Create First Order"
+      />
     </div>
   );
 }
