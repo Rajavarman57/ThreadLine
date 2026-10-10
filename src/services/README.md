@@ -272,3 +272,36 @@ export async function getOrderTracking(orderNo: string): Promise<OrderTrackingRe
 export async function getBuyerOrders(buyerId: string): Promise<BuyerPortalOrderItem[]>;
 export async function getBuyerOrderDetail(orderNo: string, buyerId: string): Promise<BuyerOrderDetail | null>;
 ```
+
+---
+
+## 11. Costing, P&L & Analytics (`src/services/finance.ts`)
+
+Handles product-level job costing, accrual profit & loss reporting, machinery utilisation, and owner dashboard analytics.
+
+### Rules & Enforcements
+1. **Accrual Order Cost Allocation**:
+   - Material cost: Exact physical issuance movements (`ISSUE` with `refType = WORK_ORDER`) evaluated at raw yarn purchase rates.
+   - Machine overheads: Exact run hours logged on machine work orders evaluated at machine hourly overhead rates.
+   - Labor wages: Monthly wages total (`getMonthlyWagesTotal`) allocated proportionately based on the order's share of total factory production hours.
+   - Unit calculations: Cost per metre produced and cost per roll.
+2. **Monthly P&L Statement**:
+   - Accrual revenue from buyer dispatch invoices dated in the month.
+   - Costs comprised of physical raw materials, factory wages, machine running overheads, and operating expenses.
+   - Cash reconciliations: Cash collected from payments in the month and outstanding receivables.
+3. **Machine Utilisation Analytics**:
+   - Calculates runtime hours against available potential calendar hours.
+4. **Owner Dashboard**:
+   - Real-time KPIs, trailing 6-month financial performance, active machines under breakdown, low-inventory raw yarns, and production orders at risk.
+5. **Role Guardrails**:
+   - `ADMIN`, `ACCOUNTS`: Full access to costing, P&L, and executive overview.
+   - `SUPERVISOR`: Read-only machinery utilisation reports.
+
+### Exported Signatures
+```typescript
+export async function getOrderCost(orderId: string): Promise<OrderCostDetail | null>;
+export async function getAllOrdersCosting(): Promise<OrderCostDetail[]>;
+export async function getMonthlyPnL(month: string): Promise<MonthlyPnLStatement>;
+export async function getMachineOutput(from: string, to: string): Promise<MachineOutputReport>;
+export async function getOwnerDashboardSummary(month: string): Promise<OwnerDashboardSummary>;
+```
