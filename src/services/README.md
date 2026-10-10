@@ -127,3 +127,24 @@ export async function markMachineIdle(machineId: string): Promise<Machine>;
 export async function logProductionOutput(input: LogOutputInput): Promise<{ log: ProductionLog; updatedWO: WorkOrder }>;
 export async function getWorkOrders(filters: WorkOrdersFilterInput): Promise<PaginatedResult<WorkOrderRow>>;
 ```
+
+---
+
+## 6. Quality Control & Roll Traceability (`src/services/quality.ts`)
+
+Handles roll grading, defect inspections, order readiness evaluation, and QR-enabled digital provenance.
+
+### Rules & Enforcements
+1. **Defect Checklist**: `REWORK` and `REJECT` outcomes require at least one identified defect with severity (`minor`, `major`, `critical`).
+2. **Supervisor Escalation**: Marking a roll for `REWORK` automatically triggers a notification for `SUPERVISOR` personnel.
+3. **Order Completion Trigger**: Once all rolls for an order are resolved (`no PENDING or REWORK`) and total `PASSED` length reaches $\ge 98\%$ of order quantity, the order status transitions to `READY` and triggers a notification for `ACCOUNTS`.
+
+### Exported Signatures
+```typescript
+export async function getQCKpiSummary(): Promise<QCKpiSummary>;
+export async function getQCQueue(filters: QCQueueFilterInput): Promise<PaginatedResult<QCQueueRow>>;
+export async function inspectRoll(input: InspectRollInput): Promise<QCInspectionResult>;
+export async function markReworkDone(input: ReworkDoneInput): Promise<Roll>;
+export async function getRollTrace(rollNo: string): Promise<RollTraceDetail | null>;
+export async function getRollsRegister(filters: RollsRegisterFilterInput): Promise<PaginatedResult<RollRegisterRow>>;
+```
