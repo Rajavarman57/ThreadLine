@@ -11,6 +11,9 @@ import {
   Layers,
 } from "lucide-react";
 
+import { Role } from "@prisma/client";
+import { ResetSampleDataButton } from "./reset-sample-data-button";
+
 const MASTER_TABS = [
   { name: "Suppliers", href: "/master/suppliers", icon: Truck },
   { name: "Buyers", href: "/master/buyers", icon: Users2 },
@@ -19,11 +22,16 @@ const MASTER_TABS = [
   { name: "Yarn & BOM", href: "/master/yarn-types", icon: Layers },
 ];
 
-export function MasterTabs() {
+interface MasterTabsProps {
+  userRole?: Role;
+}
+
+export function MasterTabs({ userRole }: MasterTabsProps) {
   const pathname = usePathname();
 
   return (
-    <div className="flex border-b border-border/80 gap-2 overflow-x-auto pb-1 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/80 gap-2 pb-1 mb-6">
+      <div className="flex gap-2 overflow-x-auto">
       {MASTER_TABS.map((tab) => {
         const Icon = tab.icon;
         const isActive =
@@ -46,6 +54,8 @@ export function MasterTabs() {
           </Link>
         );
       })}
+      </div>
+      <ResetSampleDataButton userRole={userRole} />
     </div>
   );
 }

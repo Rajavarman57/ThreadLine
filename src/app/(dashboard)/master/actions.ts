@@ -264,3 +264,64 @@ export async function deleteBOMAction(id: string): Promise<ActionResponse> {
     return { success: false, error: error.message || "Failed to remove BOM item" };
   }
 }
+
+// ----------------------------------------------------------------------------
+// ADMIN RESET SAMPLE DATA ACTION
+// ----------------------------------------------------------------------------
+
+export async function resetSampleDataAction(): Promise<ActionResponse> {
+  try {
+    const { requireRole } = await import("@/lib/auth/session");
+    const { Role } = await import("@prisma/client");
+    const { prisma } = await import("@/lib/db");
+    const { logAction } = await import("@/lib/audit");
+
+    const user = await requireRole([Role.ADMIN]);
+
+    // Transactionally wipe operational and transactional data, keeping master catalog
+    await prisma.$transaction([
+      prisma.payment.deleteMany({}),
+      prisma.invoice.deleteMany({}),
+      prisma.dispatchLine.deleteMany({}),
+      prisma.dispatch.deleteMany({}),
+      prisma.qCInspection.deleteMany({}),
+      prisma.roll.deleteMany({}),
+      prisma.productionLog.deleteMany({}),
+      prisma.workOrder.deleteMany({}),
+      prisma.goodsReceipt.deleteMany({}),
+      prisma.purchaseLine.deleteMany({}),
+      prisma.purchaseOrder.deleteMany({}),
+      prisma.order.deleteMany({}),
+      prisma.stockMovement.deleteMany({}),
+      prisma.attendance.deleteMany({}),
+      prisma.expense.deleteMany({}),
+    ]);
+
+    await logAction({
+      userId: user.id,
+      action: "RESET_TRANSACTIONAL_DATA",
+      entity: "System",
+      meta: { message: "Transactional factory data wiped and reset." },
+    });
+
+    revalidatePath("/orders");
+    revalidatePath("/inventory");
+    revalidatePath("/production");
+    revalidatePath("/quality");
+    revalidatePath("/dispatch");
+    revalidatePath("/finance");
+    revalidatePath("/hr");
+    revalidatePath("/master");
+
+    return {
+      success: true,
+      data: { message: "Transactional data has been successfully reset." },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || "Failed to reset sample data",
+    };
+  }
+}
+

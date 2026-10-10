@@ -37,7 +37,7 @@ export default async function MachinesPage({ searchParams }: PageProps) {
         description="Foundational entities for Everest Textile Mills: Suppliers, Buyers, Machines, Workers, and Yarn/BOM specifications."
       />
 
-      <MasterTabs />
+      <MasterTabs userRole={userRole} />
 
       <MachinesClient
         initialData={result.data}
