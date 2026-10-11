@@ -103,7 +103,7 @@ export function AttendanceClient({
     setRecords((prev) =>
       prev.map((r) =>
         r.workerId === workerId
-          ? { ...r, hours: Math.max(0, Math.min(24, hours)) }
+          ? { ...r, hours: Math.max(0, Math.min(12, hours)) }
           : r
       )
     );
@@ -115,7 +115,7 @@ export function AttendanceClient({
     setRecords((prev) =>
       prev.map((r) =>
         r.workerId === workerId
-          ? { ...r, overtimeHours: Math.max(0, Math.min(24, otHours)) }
+          ? { ...r, overtimeHours: Math.max(0, Math.min(6, otHours)) }
           : r
       )
     );
@@ -138,6 +138,18 @@ export function AttendanceClient({
   function handleSave() {
     if (!canEdit) {
       toast.error("You do not have permission to record attendance.");
+      return;
+    }
+
+    const todayKolkata = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    if (date.slice(0, 10) > todayKolkata) {
+      toast.error("Attendance date cannot be in the future");
       return;
     }
 

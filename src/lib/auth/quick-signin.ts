@@ -50,6 +50,49 @@ const QUICK_SIGNIN_ROLES = {
     description: "Live order tracking stepper, fabric roll status and official tax invoice PDFs",
     redirectTo: "/portal",
   },
+  // All 6 commercial buyers
+  buyer1: {
+    roleKey: "buyer1",
+    roleName: "Raymond Lifestyle Apparel",
+    email: "buyer1@buyers.test",
+    description: "Commercial buyer account for Raymond Lifestyle Apparel",
+    redirectTo: "/portal",
+  },
+  buyer2: {
+    roleKey: "buyer2",
+    roleName: "Arvind Mills Garments Div",
+    email: "buyer2@buyers.test",
+    description: "Commercial buyer account for Arvind Mills Garments Div",
+    redirectTo: "/portal",
+  },
+  buyer3: {
+    roleKey: "buyer3",
+    roleName: "Madura Fashion & Brands (Aditya Birla)",
+    email: "buyer3@buyers.test",
+    description: "Commercial buyer account for Madura Fashion & Brands",
+    redirectTo: "/portal",
+  },
+  buyer4: {
+    roleKey: "buyer4",
+    roleName: "Page Industries (Jockey India)",
+    email: "buyer4@buyers.test",
+    description: "Commercial buyer account for Page Industries (Jockey India)",
+    redirectTo: "/portal",
+  },
+  buyer5: {
+    roleKey: "buyer5",
+    roleName: "Zodiac Clothing Company",
+    email: "buyer5@buyers.test",
+    description: "Commercial buyer account for Zodiac Clothing Company",
+    redirectTo: "/portal",
+  },
+  buyer6: {
+    roleKey: "buyer6",
+    roleName: "Eastman Exports Global",
+    email: "buyer6@buyers.test",
+    description: "Commercial buyer account for Eastman Exports Global",
+    redirectTo: "/portal",
+  },
 } as const;
 
 type QuickSignInRoleKey = keyof typeof QUICK_SIGNIN_ROLES;

@@ -79,16 +79,40 @@ export function ExpensesClient({
     router.push(`/expenses?${params.toString()}`);
   }
 
+  const [expenseErrors, setExpenseErrors] = useState<{ amount?: string; date?: string }>({});
+
   function handleCreateExpense(e: React.FormEvent) {
     e.preventDefault();
     if (!canCreate) {
       toast.error("You do not have permission to record expenses.");
       return;
     }
+    setExpenseErrors({});
 
     const numAmount = parseFloat(amount);
+    const errors: { amount?: string; date?: string } = {};
+
     if (isNaN(numAmount) || numAmount <= 0) {
-      toast.error("Please enter a valid positive amount.");
+      errors.amount = "Amount must be greater than 0";
+    } else if (Math.round(numAmount * 100) !== numAmount * 100) {
+      errors.amount = "Amount can have at most 2 decimal places";
+    }
+
+    const todayKolkata = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    if (!date) {
+      errors.date = "Expense date is required";
+    } else if (date.slice(0, 10) > todayKolkata) {
+      errors.date = "Date cannot be in the future";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setExpenseErrors(errors);
       return;
     }
 
@@ -195,10 +219,16 @@ export function ExpensesClient({
                         min="0.01"
                         placeholder="e.g. 15000"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => {
+                          setAmount(e.target.value);
+                          if (expenseErrors.amount) setExpenseErrors((prev) => ({ ...prev, amount: undefined }));
+                        }}
                         required
                         className="h-9 text-xs"
                       />
+                      {expenseErrors.amount && (
+                        <p className="text-destructive text-xs">{expenseErrors.amount}</p>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -206,10 +236,16 @@ export function ExpensesClient({
                       <Input
                         type="date"
                         value={date}
-                        onChange={(e) => setDate(e.target.value)}
+                        onChange={(e) => {
+                          setDate(e.target.value);
+                          if (expenseErrors.date) setExpenseErrors((prev) => ({ ...prev, date: undefined }));
+                        }}
                         required
                         className="h-9 text-xs"
                       />
+                      {expenseErrors.date && (
+                        <p className="text-destructive text-xs">{expenseErrors.date}</p>
+                      )}
                     </div>
                   </div>
 

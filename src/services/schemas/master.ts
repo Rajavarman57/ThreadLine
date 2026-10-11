@@ -1,15 +1,22 @@
 import { z } from "zod";
 import { MachineType, MachineStatus } from "@prisma/client";
+import {
+  personName,
+  optionalPersonName,
+  optionalPhoneIN,
+  optionalEmailField,
+  money,
+} from "@/lib/validation";
 
 // ============================================================================
 // SUPPLIER SCHEMAS
 // ============================================================================
 
 export const supplierSchema = z.object({
-  name: z.string().min(2, "Supplier name must be at least 2 characters"),
-  contactPerson: z.string().optional(),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  name: z.string().min(2, "Supplier name must be at least 2 characters").transform((v) => v.trim()),
+  contactPerson: optionalPersonName,
+  email: optionalEmailField,
+  phone: optionalPhoneIN,
   address: z.string().optional(),
   active: z.boolean().default(true),
 });
@@ -21,10 +28,10 @@ export type SupplierInput = z.infer<typeof supplierSchema>;
 // ============================================================================
 
 export const buyerSchema = z.object({
-  name: z.string().min(2, "Buyer name must be at least 2 characters"),
-  contactPerson: z.string().optional(),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  name: z.string().min(2, "Buyer name must be at least 2 characters").transform((v) => v.trim()),
+  contactPerson: optionalPersonName,
+  email: optionalEmailField,
+  phone: optionalPhoneIN,
   address: z.string().optional(),
   active: z.boolean().default(true),
 });
@@ -58,16 +65,12 @@ export type MachineInput = z.infer<typeof machineSchema>;
 // ============================================================================
 
 export const workerSchema = z.object({
-  name: z.string().min(2, "Worker name is required"),
+  name: personName,
   code: z.string().optional(),
   role: z.string().optional(),
-  phone: z.string().optional(),
-  dailyRate: z.coerce
-    .number()
-    .min(0, "Daily rate cannot be negative"),
-  otRatePerHour: z.coerce
-    .number()
-    .min(0, "Overtime rate cannot be negative"),
+  phone: optionalPhoneIN,
+  dailyRate: money(100_000),
+  otRatePerHour: money(10_000),
   active: z.boolean().default(true),
 });
 
@@ -100,7 +103,7 @@ export const bomSchema = z.object({
   yarnTypeId: z.string().min(1, "Please select a yarn type"),
   yarnPerMetre: z.coerce
     .number()
-    .positive("Yarn consumption per metre must be greater than 0"),
+    .positive("Yarn consumption must be greater than zero"),
 });
 
 export type BomInput = z.infer<typeof bomSchema>;

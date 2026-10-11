@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { StockMovementReason } from "@prisma/client";
+import { optionalVehicleNo, quantity } from "@/lib/validation";
 
 // ============================================================================
 // GOODS RECEIPT SCHEMA
@@ -7,10 +8,8 @@ import { StockMovementReason } from "@prisma/client";
 
 export const goodsReceiptSchema = z.object({
   yarnTypeId: z.string().min(1, "Yarn type selection is required"),
-  qty: z.coerce
-    .number()
-    .positive("Receipt quantity must be greater than 0"),
-  vehicleNo: z.string().optional().nullable().transform((v) => v || null),
+  qty: quantity(1_000_000),
+  vehicleNo: optionalVehicleNo,
   supplierId: z.string().optional().nullable().transform((v) => v || null),
   poLineId: z.string().optional().nullable().transform((v) => v || null),
   orderId: z.string().optional().nullable().transform((v) => v || null),

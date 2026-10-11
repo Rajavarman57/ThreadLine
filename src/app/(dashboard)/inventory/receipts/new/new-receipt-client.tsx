@@ -152,8 +152,16 @@ export function NewReceiptClient({
             <Input
               id="vehicleNo"
               placeholder="e.g. TN 38 BH 4521"
-              {...register("vehicleNo")}
+              className="font-mono uppercase"
+              {...register("vehicleNo", {
+                onChange: (e) => {
+                  setValue("vehicleNo", e.target.value.toUpperCase());
+                },
+              })}
             />
+            {errors.vehicleNo && (
+              <p className="text-destructive text-xs">{errors.vehicleNo.message}</p>
+            )}
           </div>
         </div>
 

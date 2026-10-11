@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ProductionStage, WorkOrderStatus, Shift, MachineStatus } from "@prisma/client";
+import { quantity } from "@/lib/validation";
 
 export const planProductionSchema = z.object({
   orderId: z.string().min(1, "Order selection is required"),
@@ -26,13 +27,10 @@ export type MachineActionInput = z.infer<typeof machineActionSchema>;
 
 export const logOutputSchema = z.object({
   workOrderId: z.string().min(1, "Work order ID is required"),
-  metres: z
+  metres: quantity(100_000),
+  hours: z.coerce
     .number()
-    .positive("Output metres must be greater than zero")
-    .max(100000, "Quantity is unrealistically high"),
-  hours: z
-    .number()
-    .positive("Production hours must be greater than zero")
+    .min(0, "Shift hours cannot be negative")
     .max(24, "Shift hours cannot exceed 24"),
   shift: z.nativeEnum(Shift),
 });

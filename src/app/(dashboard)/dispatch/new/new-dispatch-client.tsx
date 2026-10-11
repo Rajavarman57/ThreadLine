@@ -96,22 +96,31 @@ export function NewDispatchClient({
   const taxAmount = Number(((subtotal * taxPct) / 100).toFixed(2));
   const grandTotal = Number((subtotal + taxAmount).toFixed(2));
 
+  const [fieldErrors, setFieldErrors] = useState<{ vehicleNo?: string; driver?: string }>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     if (!orderId) {
       setError("Please select a sales order.");
       return;
     }
+
+    const errors: { vehicleNo?: string; driver?: string } = {};
     if (!vehicleNo.trim()) {
-      setError("Vehicle registration number is required.");
-      return;
+      errors.vehicleNo = "Vehicle number is required";
     }
     if (!driver.trim()) {
-      setError("Driver name is required.");
+      errors.driver = "Driver name is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
+
     if (selectedRollIds.size === 0) {
       setError("Please tick at least one roll for this dispatch manifest.");
       return;
@@ -193,9 +202,15 @@ export function NewDispatchClient({
                   id="vehicleNo"
                   placeholder="e.g. TN 38 BH 4521"
                   value={vehicleNo}
-                  onChange={(e) => setVehicleNo(e.target.value)}
-                  className="h-10"
+                  onChange={(e) => {
+                    setVehicleNo(e.target.value.toUpperCase());
+                    if (fieldErrors.vehicleNo) setFieldErrors((prev) => ({ ...prev, vehicleNo: undefined }));
+                  }}
+                  className="h-10 font-mono uppercase"
                 />
+                {fieldErrors.vehicleNo && (
+                  <p className="text-destructive text-xs">{fieldErrors.vehicleNo}</p>
+                )}
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
@@ -206,9 +221,15 @@ export function NewDispatchClient({
                   id="driver"
                   placeholder="e.g. Murugan Selvam"
                   value={driver}
-                  onChange={(e) => setDriver(e.target.value)}
+                  onChange={(e) => {
+                    setDriver(e.target.value);
+                    if (fieldErrors.driver) setFieldErrors((prev) => ({ ...prev, driver: undefined }));
+                  }}
                   className="h-10"
                 />
+                {fieldErrors.driver && (
+                  <p className="text-destructive text-xs">{fieldErrors.driver}</p>
+                )}
               </div>
             </div>
           </div>

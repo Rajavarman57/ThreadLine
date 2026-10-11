@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { quantity, money, dateNotPast } from "@/lib/validation";
 
 // ============================================================================
 // ORDER CREATION SCHEMA
@@ -8,13 +9,9 @@ export const createOrderSchema = z.object({
   buyerId: z.string().min(1, "Buyer selection is required"),
   fabricType: z.string().min(1, "Fabric type selection is required"),
   colour: z.string().min(1, "Colour / shade is required"),
-  qtyMetres: z.coerce
-    .number()
-    .positive("Quantity in metres must be greater than 0"),
-  ratePerMetre: z.coerce
-    .number()
-    .positive("Rate per metre must be greater than 0"),
-  deadline: z.string().min(1, "Order delivery deadline date is required"),
+  qtyMetres: quantity(1_000_000),
+  ratePerMetre: money(100_000),
+  deadline: dateNotPast,
 });
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;

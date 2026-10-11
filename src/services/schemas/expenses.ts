@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { money, dateNotFuture } from "@/lib/validation";
 
 export const ExpenseCategoryEnum = z.enum([
   "ELECTRICITY",
@@ -12,8 +13,8 @@ export type ExpenseCategory = z.infer<typeof ExpenseCategoryEnum>;
 
 export const createExpenseSchema = z.object({
   category: ExpenseCategoryEnum,
-  amount: z.coerce.number().positive("Amount must be greater than zero"),
-  date: z.string().min(1, "Date is required"),
+  amount: money(100_000_000),
+  date: dateNotFuture,
   orderId: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
 });

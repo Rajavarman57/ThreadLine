@@ -1,14 +1,15 @@
 import { z } from "zod";
 import { InvoiceStatus } from "@prisma/client";
+import { money, dateNotFuture } from "@/lib/validation";
 
 export const PaymentMethodEnum = z.enum(["CASH", "BANK", "UPI", "CHEQUE"]);
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
 
 export const recordPaymentSchema = z.object({
   invoiceId: z.string().min(1, "Invoice ID is required"),
-  amount: z.coerce.number().positive("Amount must be greater than zero"),
+  amount: money(100_000_000),
   method: PaymentMethodEnum,
-  paidAt: z.string().optional().default(() => new Date().toISOString()),
+  paidAt: dateNotFuture.optional().default(() => new Date().toISOString()),
 });
 
 export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;

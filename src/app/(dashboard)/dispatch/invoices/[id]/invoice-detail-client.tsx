@@ -52,23 +52,41 @@ export function InvoiceDetailClient({
   const [paidAt, setPaidAt] = useState<string>(
     new Date().toISOString().substring(0, 10)
   );
+  const [paymentFieldErrors, setPaymentFieldErrors] = useState<{ amount?: string; paidAt?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
 
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setDialogError(null);
+    setPaymentFieldErrors({});
 
     const numericAmount = parseFloat(amount);
+    const errors: { amount?: string; paidAt?: string } = {};
+
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      setDialogError("Please enter a valid payment amount greater than zero.");
-      return;
+      errors.amount = "Amount must be greater than 0";
+    } else if (numericAmount > invoice.outstanding + 0.01) {
+      errors.amount = `Payment cannot exceed outstanding balance of ₹${invoice.outstanding.toLocaleString()}.`;
+    } else if (Math.round(numericAmount * 100) !== numericAmount * 100) {
+      errors.amount = "Amount can have at most 2 decimal places";
     }
 
-    if (numericAmount > invoice.outstanding + 0.01) {
-      setDialogError(
-        `Payment cannot exceed outstanding balance of ₹${invoice.outstanding.toLocaleString()}.`
-      );
+    const todayKolkata = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    if (!paidAt) {
+      errors.paidAt = "Payment date is required";
+    } else if (paidAt.slice(0, 10) > todayKolkata) {
+      errors.paidAt = "Date cannot be in the future";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setPaymentFieldErrors(errors);
       return;
     }
 
@@ -180,10 +198,16 @@ export function InvoiceDetailClient({
                         max={invoice.outstanding}
                         placeholder="0.00"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => {
+                          setAmount(e.target.value);
+                          if (paymentFieldErrors.amount) setPaymentFieldErrors((prev) => ({ ...prev, amount: undefined }));
+                        }}
                         required
                         className="font-mono text-sm"
                       />
+                      {paymentFieldErrors.amount && (
+                        <p className="text-destructive text-xs">{paymentFieldErrors.amount}</p>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -211,9 +235,15 @@ export function InvoiceDetailClient({
                         id="payDate"
                         type="date"
                         value={paidAt}
-                        onChange={(e) => setPaidAt(e.target.value)}
+                        onChange={(e) => {
+                          setPaidAt(e.target.value);
+                          if (paymentFieldErrors.paidAt) setPaymentFieldErrors((prev) => ({ ...prev, paidAt: undefined }));
+                        }}
                         required
                       />
+                      {paymentFieldErrors.paidAt && (
+                        <p className="text-destructive text-xs">{paymentFieldErrors.paidAt}</p>
+                      )}
                     </div>
                   </div>
 
