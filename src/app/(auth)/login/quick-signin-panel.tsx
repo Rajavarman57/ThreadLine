@@ -128,8 +128,8 @@ export function QuickSignInPanel() {
                   : "border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 cursor-pointer shadow-sm hover:shadow-md"
               }`}
             >
-              <div className="flex items-center justify-between w-full mb-1.5">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-1 mb-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
                     className={`size-7 rounded-lg flex items-center justify-center border shrink-0 transition-colors ${card.color}`}
                   >
@@ -139,15 +139,15 @@ export function QuickSignInPanel() {
                       <Icon className="size-3.5" />
                     )}
                   </div>
-                  <span className="text-xs font-semibold text-slate-200 group-hover:text-white transition-colors">
+                  <span className="text-xs font-semibold text-slate-200 group-hover:text-white transition-colors truncate">
                     {card.name}
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500">
+                <span className="text-[10px] font-mono text-slate-500 truncate sm:text-right">
                   {card.email}
                 </span>
               </div>
-              <p className="text-[11px] leading-relaxed text-slate-400 font-normal line-clamp-2">
+              <p className="text-[11px] leading-relaxed text-slate-400 font-normal">
                 {card.description}
               </p>
             </button>

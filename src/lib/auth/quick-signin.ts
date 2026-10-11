@@ -7,7 +7,7 @@ import { AuthError } from "next-auth";
  * Fixed server-side allow-list of quick sign-in roles and their fixed emails and landing routes.
  * An arbitrary email or password from the client is strictly forbidden.
  */
-export const QUICK_SIGNIN_ROLES = {
+const QUICK_SIGNIN_ROLES = {
   ADMIN: {
     roleKey: "ADMIN",
     roleName: "Admin",
@@ -52,7 +52,7 @@ export const QUICK_SIGNIN_ROLES = {
   },
 } as const;
 
-export type QuickSignInRoleKey = keyof typeof QUICK_SIGNIN_ROLES;
+type QuickSignInRoleKey = keyof typeof QUICK_SIGNIN_ROLES;
 
 export interface QuickSignInResponse {
   ok: boolean;
