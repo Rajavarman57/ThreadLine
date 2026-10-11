@@ -13,6 +13,10 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  if (user.role === "BUYER") {
+    redirect("/portal");
+  }
+
   const { getLowStockCount } = await import("@/services/inventory");
   const lowStockCount = await getLowStockCount().catch((err) => {
     console.error("Failed to load lowStockCount for layout:", err);

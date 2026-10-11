@@ -2,7 +2,7 @@ import { getOrderDetail } from "@/services/orders";
 import { prisma } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth/session";
 import { Role } from "@prisma/client";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { OrderDetailClient } from "./order-detail-client";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,9 @@ interface PageProps {
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params;
   const user = await getSessionUser();
+  if (user?.role === Role.BUYER) {
+    redirect("/portal");
+  }
   const userRole = user?.role || Role.BUYER;
 
   const [order, suppliers] = await Promise.all([

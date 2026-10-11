@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { OrdersClient } from "./orders-client";
 import { OrderStatus, Role } from "@prisma/client";
 
+import { redirect } from "next/navigation";
+
 export const dynamic = "force-dynamic";
 
 interface PageProps {
@@ -17,6 +19,9 @@ interface PageProps {
 
 export default async function OrdersPage({ searchParams }: PageProps) {
   const user = await getSessionUser();
+  if (user?.role === Role.BUYER) {
+    redirect("/portal");
+  }
   const userRole = user?.role || Role.BUYER;
 
   const params = await searchParams;
@@ -30,6 +35,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
     pageSize,
     status,
     search,
+    buyerId: user?.buyerId || undefined,
   });
 
   return (

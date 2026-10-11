@@ -14,12 +14,14 @@ export async function getOrders(params: {
   pageSize?: number;
   status?: OrderStatus;
   search?: string;
+  buyerId?: string;
 }) {
   const page = params.page || 1;
   const pageSize = params.pageSize || 15;
   const skip = (page - 1) * pageSize;
 
   const where: Prisma.OrderWhereInput = {
+    ...(params.buyerId ? { buyerId: params.buyerId } : {}),
     ...(params.status ? { status: params.status } : {}),
     ...(params.search
       ? {
